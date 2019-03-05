@@ -1,0 +1,10 @@
+{
+  "botium": {
+    "Capabilities": {
+      "PROJECTNAME": "Botium Project Wechat",
+      "CONTAINERMODE": "wechat",
+      "WECHAT_WEBHOOK_URL": "http://localhost:3000/wechat",
+      "WECHAT_TOKEN": "TokenForWechat"
+    }
+  }
+}
