@@ -2,7 +2,7 @@
 
 [![NPM](https://nodei.co/npm/botium-connector-wechat.png?downloads=true&downloadRank=true&stars=true)](https://nodei.co/npm/botium-connector-wechat/)
 
-[![Codeship Status for codeforequity-at/botium-connector-wechat](https://app.codeship.com/projects/c947b780-0daa-0137-4acf-3a9e8715cbf8/status?branch=master)](https://app.codeship.com/projects/326745)
+[![Codeship Status for codeforequity-at/botium-connector-wechat](https://app.codeship.com/projects/a9d4b7a0-2182-0137-90bb-0eb3122fb017/status?branch=master)](https://app.codeship.com/projects/329576)
 [![npm version](https://badge.fury.io/js/botium-connector-wechat.svg)](https://badge.fury.io/js/botium-connector-wechat)
 [![license](https://img.shields.io/github/license/mashape/apistatus.svg)]()
 
@@ -117,10 +117,10 @@ _Optional_
 
 Wechat Open ID of the sender. If it is omitted, then Connector generates one for each test. Good to emulate sessions. 
 
-### Roadmap
+## Roadmap
 * Support for async messages (Communicating direct with Wechat API)
 * Rich component support in Wechat responses (links, images...)
 * Simulate user interaction (If Wechat supports it)
-* Maybe aome technical checks
+* Add some technical checks
   * Signature (Token) validation
   * Get endpoint (Availability, response, token validation)

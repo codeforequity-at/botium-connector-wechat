@@ -18,12 +18,12 @@ const answers = [
 require('dotenv').config()
 
 if (!process.env.APP_ID) {
-  console('Error, app id is missing!')
+  console.log('Error, app id is missing!')
   process.exit(1)
 }
 
 if (!process.env.TOKEN) {
-  console('Error, token is missing!')
+  console.log('Error, token is missing!')
   process.exit(1)
 }
 
@@ -32,7 +32,6 @@ if (!process.env.PORT) {
   process.exit(1)
 }
 
-const util = require('util')
 const express = require('express')
 const wechat = require('wechat')
 
@@ -43,25 +42,25 @@ const config = {
   appid: process.env.APP_ID
 }
 
-app.use(express.query());
+app.use(express.query())
 
 app.use('/wechat', wechat(config, function (req, res, next) {
+  const userSays = req.weixin
 
-    var userSays = req.weixin;
-
-    let response
-    if (userSays.MsgType != 'text') {
-      response = {type: "text", content: 'Chatbot accepts just text!'}
+  let response
+  if (userSays.MsgType !== 'text') {
+    response = { type: 'text', content: 'Chatbot accepts just text!' }
+  } else {
+    const answer = answers.find((a) => a.input.indexOf(userSays.Content) >= 0)
+    if (answer) {
+      response = answer.output
     } else {
-      const answer = answers.find((a) => a.input.indexOf(userSays.Content) >= 0)
-      if (answer) {
-        response = answer.output
-      } else {
-        response = {type: "text", content: `You said: ${userSays.Content}`}
-      }
+      response = { type: 'text', content: `You said: ${userSays.Content}` }
     }
-    res.reply(response)
   }
+  console.log(`Input: "${userSays.Content}", Output: "${response.content}"`)
+  res.reply(response)
+}
 ))
 
 app.listen(process.env.PORT, function () {
