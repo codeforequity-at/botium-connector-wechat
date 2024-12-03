@@ -1,10 +1,9 @@
-const request = require('request')
 const debug = require('debug')('botium-connector-wechat')
 const util = require('util')
 const randomize = require('randomatic')
 const crypto = require('crypto')
 const jsontoxml = require('jsontoxml')
-const xml2js = require('xml2js').parseString
+const xml2js = require('xml2js').parseStringPromise
 
 const Capabilities = {
   WECHAT_WEBHOOK_URL: 'WECHAT_WEBHOOK_URL',
@@ -45,10 +44,11 @@ class BotiumConnectorWechat {
     }
   }
 
-  UserSays (msg) {
+  async UserSays (msg) {
     debug('UserSays called')
     const params = {
       url: this.caps[Capabilities.WECHAT_WEBHOOK_URL],
+      method: 'POST',
       headers: { 'Content-Type': 'text/xml' },
       qs: this._createPostParams(),
       body: this._createXML(msg.messageText)
@@ -56,27 +56,30 @@ class BotiumConnectorWechat {
 
     debug(`Calling Wechat service ${util.inspect(params)}`)
 
-    request.post(params, (error, response, body) => {
-      if (error) {
-        debug(`Wechat service responded with error:\n${util.inspect(error)}`)
-        return
-      }
-      debug(`Wechat service responded: \n${util.inspect(body)}`)
-      xml2js(body, (err, result) => {
-        if (err) {
-          debug(`Cant parse to XML:\n${util.inspect(body)}`)
-          return
-        }
-        const response = { sender: 'bot', sourceData: body }
-        // http://admin.wechat.com/wiki/index.php?title=Common_Messages#Text_Message
-        if (result.xml.MsgType[0] === 'text') {
-          this.queueBotSays(Object.assign({ messageText: result.xml.Content[0] }, response))
-        } else {
-          debug(`Not supported message type: ${result.xml.MsgType[0]}`)
-        }
-      })
+    const response = await fetch(new URL('?' + new URLSearchParams(params.qs).toString(), params.url).toString(), params)
+    if (!response.ok) {
+      debug(`got error response: ${response.status}/${response.statusText}`)
+      throw new Error(`got error response: ${response.status}/${response.statusText}`)
     }
-    )
+    const body = await response.text()
+
+    debug(`Wechat service responded: \n${util.inspect(body)}`)
+
+    let asJson
+    try {
+      asJson = await xml2js(body)
+    } catch (err) {
+      this.queueBotSays(new Error(`Error parsing xml response: ${err.message}`))
+    }
+    if (asJson) {
+      const botMsg = { sender: 'bot', sourceData: body }
+      // http://admin.wechat.com/wiki/index.php?title=Common_Messages#Text_Message
+      if (asJson.xml.MsgType[0] === 'text') {
+        this.queueBotSays(Object.assign({ messageText: asJson.xml.Content[0] }, botMsg))
+      } else {
+        debug(`Not supported message type: ${asJson.xml.MsgType[0]}`)
+      }
+    }
   }
 
   async Stop () {
@@ -119,7 +122,7 @@ class BotiumConnectorWechat {
         ToUserName: `<![CDATA[${this.bot}]]>`,
         FromUserName: `<![CDATA[${this.me}]]>`,
         CreateTime: new Date().getTime(),
-        MsgType: `<![CDATA[text]]>`,
+        MsgType: '<![CDATA[text]]>',
         Content: `<![CDATA[${message}]]>`,
         MsgId: randomize('0', 17)
       }
